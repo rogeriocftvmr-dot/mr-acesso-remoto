@@ -473,6 +473,12 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           await rustDeskWinManager.closeAllSubWindows();
           bind.mainUpdateMe();
         });
+      } else if (!bind.isOutgoingOnly() &&
+          !svcStopped.value &&
+          !bind.mainIsInstalledDaemon(prompt: false)) {
+        return buildInstallCard("", "install_daemon_tip", "Install", () async {
+          await start_service(true);
+        });
       }
     } else if (isMacOS) {
       final isOutgoingOnly = bind.isOutgoingOnly();
@@ -699,6 +705,9 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   void initState() {
     super.initState();
+    if (isWindows) {
+      svcStopped.value = mainGetBoolOptionSync(kOptionStopService);
+    }
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
       final error = await bind.mainGetError();
