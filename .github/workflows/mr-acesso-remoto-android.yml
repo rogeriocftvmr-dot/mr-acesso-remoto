@@ -1,0 +1,106 @@
+name: MR Acesso Remoto — APK Android (teste)
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: read
+env:
+  ANDROID_FLUTTER_VERSION: "3.24.5"
+  RUST_VERSION: "1.75"
+  CARGO_NDK_VERSION: "3.1.2"
+  NDK_VERSION: "r28c"
+  VCPKG_COMMIT_ID: "9e593bb18ea69cc5095e012465dcd675a822ed0d"
+  VERSION: "0.1.0"
+jobs:
+  generate-bridge:
+    uses: ./.github/workflows/bridge.yml
+  build-android-teste:
+    needs: [generate-bridge]
+    runs-on: ubuntu-24.04
+    steps:
+      # 1. Liberar espaço em disco (o build é pesado)
+      - uses: jlumbroso/free-disk-space@v1.3.1
+        with: { tool-cache: false, android: false, dotnet: true,
+                haskell: true, large-packages: false,
+                docker-images: true, swap-storage: false }
+      # 2. Dependências do sistema (inclui openjdk-17-jdk-headless,
+      #    clang, cmake, ninja, nasm, pkg-config, libgtk-3-dev etc. —
+      #    mesma lista do job oficial)
+      - run: sudo apt-get update && sudo apt-get install -y clang cmake
+          curl gcc-multilib git g++ g++-multilib libayatana-appindicator3-dev
+          libasound2-dev libc6-dev libclang-dev libunwind-dev
+          libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgtk-3-dev
+          libpulse-dev libva-dev libxcb-randr0-dev libxcb-shape0-dev
+          libxcb-xfixes0-dev libxdo-dev libxfixes-dev llvm-dev nasm
+          ninja-build openjdk-17-jdk-headless pkg-config tree wget
+      # 3. Checkout COM submódulos (hbb_common é submódulo)
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      # 4. Flutter 3.24.5 (stable) + patch do dropdown do RustDesk
+      - uses: subosito/flutter-action@v2
+        with: { channel: "stable", flutter-version: "3.24.5" }
+      - run: |
+          cd $(dirname $(dirname $(which flutter)))
+          git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
+      # 5. NDK r28c
+      - uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with: { ndk-version: "r28c", add-to-path: true }
+      # 6. vcpkg com cache do GitHub Actions (pin do § 1)
+      - uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: /opt/artifacts/vcpkg
+          vcpkgGitCommitId: "9e593bb18ea69cc5095e012465dcd675a822ed0d"
+          doNotCache: false
+      # 7. Dependências nativas Android (só arm64-v8a no teste)
+      - run: ./flutter/build_android_deps.sh "arm64-v8a"
+      # 8. Restaurar o bridge gerado no job anterior
+      - uses: actions/download-artifact@v4
+        with: { name: bridge-artifact, path: ./ }
+      # 9. Toolchain Rust 1.75 + cache
+      - uses: dtolnay/rust-toolchain@v1
+        with: { toolchain: "1.75", components: "rustfmt" }
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: mr-acesso-remoto-lib-cache-android
+          key: aarch64-linux-android
+      # 10. Compilar a biblioteca Rust e copiar o .so
+      - name: Build rustdesk lib
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
+          rustup target add aarch64-linux-android
+          cargo install cargo-ndk --version 3.1.2 --locked
+          ./flutter/ndk_arm64.sh
+          mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
+          cp ./target/aarch64-linux-android/release/liblibrustdesk.so \
+             ./flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
+      # 11. Build do APK — assinatura DEBUG (teste), sem --obfuscate
+      #     para os logs do teste ficarem legíveis
+      - name: Build APK
+        shell: bash
+        env: { JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64 }
+        run: |
+          export PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH
+          sed -i "s/org.gradle.jvmargs=-Xmx1024M/org.gradle.jvmargs=-Xmx2g/g" \
+            ./flutter/android/gradle.properties
+          sed -i "s/signingConfigs.release/signingConfigs.debug/g" \
+            ./flutter/android/app/build.gradle
+          mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
+          cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so \
+             ./flutter/android/app/src/main/jniLibs/arm64-v8a/
+          cp ./target/aarch64-linux-android/release/liblibrustdesk.so \
+             ./flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
+          pushd flutter
+          flutter build apk --release --target-platform android-arm64 --split-per-abi
+          popd
+          mkdir -p out-apk
+          mv flutter/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+             out-apk/mr-acesso-remoto-0.1.0-teste-aarch64.apk
+      # 12. Subir o APK como artefato — É AQUI QUE O APK SAI.
+      #     Não há publicação em release nem na Play Store.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mr-acesso-remoto-0.1.0-teste-aarch64.apk
+          path: out-apk/mr-acesso-remoto-0.1.0-teste-aarch64.apk
+          retention-days: 30
