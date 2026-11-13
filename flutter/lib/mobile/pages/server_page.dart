@@ -583,7 +583,7 @@ class _PermissionCheckerState extends State<PermissionChecker> {
                 title: Text(translate('Change Path')),
                 content: Column(mainAxisSize: MainAxisSize.min, children: [
                   ListTile(
-                    title: Text(translate('RustDesk storage')),
+                    title: Text(translate('MR Acesso Remoto')),
                     onTap: () => close(true),
                   ),
                   ListTile(
