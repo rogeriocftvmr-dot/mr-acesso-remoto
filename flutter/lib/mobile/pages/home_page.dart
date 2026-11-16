@@ -150,7 +150,22 @@ class HomePageState extends State<HomePage> {
         ],
       );
     }
-    return Text(bind.mainGetAppNameSync());
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Image.asset(
+            'assets/icon.png',
+            height: 28,
+            width: 28,
+            fit: BoxFit.cover,
+          ),
+          ),
+        const SizedBox(width: 8),
+        Text(bind.mainGetAppNameSync()),
+      ],
+      );
   }
 }
 
