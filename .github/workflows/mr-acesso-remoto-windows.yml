@@ -120,6 +120,7 @@ jobs:
         run: |
           python3 .\build.py --portable --flutter --skip-portable-pack --hwcodec --vram
           mv ./flutter/build/windows/x64/runner/Release ./rustdesk
+                    mv ./rustdesk/rustdesk.exe "./rustdesk/MR Acesso Remoto.exe"
 
           # Download usbmmidd_v2.zip and extract it to ./rustdesk
           Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
@@ -185,7 +186,7 @@ jobs:
           sed -i '/dpiAware/d' res/manifest.xml
           pushd ./libs/portable
           pip3 install -r requirements.txt
-          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
+          python3 ./generate.py -f ../../rustdesk/ -o . -e "../../rustdesk/MR Acesso Remoto.exe"
           popd
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/mr-acesso-remoto-${{ env.VERSION }}-x86_64.exe
@@ -198,7 +199,7 @@ jobs:
       - name: Build msi
         run: |
           cp -r ./rustdesk ./rustdesk-msi
-          mv ./rustdesk-msi/rustdesk.exe "./rustdesk-msi/MR Acesso Remoto.exe"
+        
           pushd ./res/msi
           python preprocess.py --arp --app-name "MR Acesso Remoto" -v ${{ env.VERSION }} -d ../../rustdesk-msi
           nuget restore msi.sln
