@@ -199,7 +199,6 @@ jobs:
       - name: Build msi
         run: |
           cp -r ./rustdesk ./rustdesk-msi
-        
           pushd ./res/msi
           python preprocess.py --arp --app-name "MR Acesso Remoto" -v ${{ env.VERSION }} -d ../../rustdesk-msi
           nuget restore msi.sln
