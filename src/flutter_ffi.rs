@@ -1143,11 +1143,11 @@ pub fn main_get_socks() -> Vec<String> {
 }
 
 pub fn main_get_app_name() -> String {
-    get_app_name()
+    "MR Acesso Remoto".to_string()
 }
 
 pub fn main_get_app_name_sync() -> SyncReturn<String> {
-    SyncReturn(get_app_name())
+    SyncReturn("MR Acesso Remoto".to_string())
 }
 
 pub fn main_uri_prefix_sync() -> SyncReturn<String> {
