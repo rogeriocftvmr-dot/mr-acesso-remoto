@@ -124,6 +124,13 @@ Future<void> initEnv(String appType) async {
   // for convenience, use global FFI on mobile platform
   // focus on multi-ffi on desktop first
   await initGlobalFFI();
+  // MR Acesso Remoto: servidor fixo (nao configuravel na tela)
+  await bind.mainSetOption(
+        key: 'custom-rendezvous-server', value: 'acesso.mrsemlimites.com.br');
+  await bind.mainSetOption(
+        key: 'relay-server', value: 'acesso.mrsemlimites.com.br');
+  await bind.mainSetOption(
+        key: 'key', value: 'qO+w47M9dOPFJA8S6n2xiQXze5AqnBDqFALFPgjwna0=');
   // await Firebase.initializeApp();
   _registerEventHandler();
   // Update the system theme.
