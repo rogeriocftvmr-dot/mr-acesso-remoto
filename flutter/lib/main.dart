@@ -25,7 +25,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'common.dart';
 import 'consts.dart';
-import 'mobile/pages/home_page.dart';
+import 'mobile/pages/home_page.dart'; import 'mobile/pages/role_picker_page.dart';
 import 'mobile/pages/server_page.dart';
 import 'mobile/widgets/deploy_dialog.dart';
 import 'models/platform_model.dart';
@@ -484,6 +484,19 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     stateGlobal.isPortrait.value = orientation == Orientation.portrait;
   }
 
+    /// MR Acesso Remoto: mostra o seletor Técnico/Cliente na primeira
+  /// abertura (opção 'mr-role' vazia). Depois de escolhido, mostra a
+  /// tela normal. No desktop vale o mesmo papel.
+  Widget _mrRoleHome(Widget mainHome) {
+    final role = bind.mainGetOptionSync(key: 'mr-role');
+    if (role == 'technician' || role == 'client') {
+      return mainHome;
+    }
+    return RolePickerPage(
+      onPicked: () => setState(() {}),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // final analytics = FirebaseAnalytics.instance;
@@ -509,10 +522,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           darkTheme: MyTheme.darkTheme,
           themeMode: MyTheme.currentThemeMode(),
           home: isDesktop
-              ? const DesktopTabPage()
+              ? _mrRoleHome(const DesktopTabPage())
               : isWeb
                   ? WebHomePage()
-                  : HomePage(),
+                  : _mrRoleHome(HomePage()),
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
