@@ -1,0 +1,203 @@
+name: MR Acesso Remoto — APK Android universal
+# BUILD Nº 11 (retry da nº 10) — 17/11 12:20
+# A nº 10 FALHOU no passo "Build rustdesk libs": o hwcodec (aarch64) não achou
+# os headers do FFmpeg (libavcodec/avcodec.h, libavutil/attributes.h,
+# libavutil/opt.h) embora o include -I /opt/artifacts/vcpkg/installed/
+# arm64-android/include estivesse certo no comando. Os 3 passos de
+# build_android_deps.sh tinham concluído, e o erro veio no PRIMEIRO target
+# (aarch64); armv7 e x86_64 nem chegaram a compilar.
+# Causa provável: 3 installs vcpkg + 3 builds Rust num só job, com cache frio
+# (rust-cache key "universal") — o hwcodec teve que compilar do zero e os
+# headers não estavam na árvore do vcpkg restaurada. Nas builds 4-9 (um job,
+# uma ABI, cache quente) o mesmo código compilou 6 vezes.
+# CORREÇÃO: matriz, UM job por ABI — exatamente o formato do upstream
+# (flutter-build.yml: build-rustdesk-android) e do nosso workflow de teste
+# que funcionou 6 vezes. Cada job instala as deps da sua ABI, VERIFICA os
+# headers (falha rápido e claro se faltar), compila a sua .so e sobe como
+# artefato. Um job final junta as 3 .so e monta o APK gordo.
+# Nenhuma mudança no código — só o workflow. Visual v2 já está na master.
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: read
+env:
+  ANDROID_FLUTTER_VERSION: "3.24.5"
+  RUST_VERSION: "1.75"
+  CARGO_NDK_VERSION: "3.1.2"
+  NDK_VERSION: "r28c"
+  VCPKG_COMMIT_ID: "9e593bb18ea69cc5095e012465dcd675a822ed0d"
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+  VERSION: "0.1.0"
+jobs:
+  generate-bridge:
+    uses: ./.github/workflows/bridge.yml
+  build-libs:
+    needs: [generate-bridge]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-linux-android
+            abi: arm64-v8a
+            include-dir: arm64-android
+            ndk-script: ./flutter/ndk_arm64.sh
+            jnilibs: arm64-v8a
+          - target: armv7-linux-androideabi
+            abi: armeabi-v7a
+            include-dir: arm-android
+            ndk-script: ./flutter/ndk_arm.sh
+            jnilibs: armeabi-v7a
+          - target: x86_64-linux-android
+            abi: x86_64
+            include-dir: x64-android
+            ndk-script: ./flutter/ndk_x64.sh
+            jnilibs: x86_64
+    runs-on: ubuntu-24.04
+    steps:
+      # 1. Liberar espaço em disco (o build é pesado)
+      - uses: jlumbroso/free-disk-space@v1.3.1
+        with: { tool-cache: false, android: false, dotnet: true,
+                haskell: true, large-packages: false,
+                docker-images: true, swap-storage: false }
+      # 2. Dependências do sistema (mesma lista do job oficial)
+      - run: sudo apt-get update && sudo apt-get install -y clang cmake
+          curl gcc-multilib git g++ g++-multilib libayatana-appindicator3-dev
+          libasound2-dev libc6-dev libclang-dev libunwind-dev
+          libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgtk-3-dev
+          libpulse-dev libva-dev libxcb-randr0-dev libxcb-shape0-dev
+          libxcb-xfixes0-dev libxdo-dev libxfixes-dev llvm-dev nasm
+          ninja-build openjdk-17-jdk-headless pkg-config tree wget
+      # 3. Checkout COM submódulos (hbb_common é submódulo)
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      # 4. Flutter 3.24.5 (stable) + patch do dropdown do RustDesk
+      - uses: subosito/flutter-action@v2
+        with: { channel: "stable", flutter-version: "3.24.5" }
+      - run: |
+          cd $(dirname $(dirname $(which flutter)))
+          git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
+      # 5. NDK r28c
+      - uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with: { ndk-version: "r28c", add-to-path: true }
+      # 6. vcpkg com cache do GitHub Actions (pin do § 1)
+      - uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: /opt/artifacts/vcpkg
+          vcpkgGitCommitId: "9e593bb18ea69cc5095e012465dcd675a822ed0d"
+          doNotCache: false
+      # 7. Dependências nativas Android — SÓ a arquitetura deste job
+      - name: Install vcpkg dependencies
+        run: ./flutter/build_android_deps.sh "${{ matrix.abi }}"
+      # 8. VERIFICAR os headers do FFmpeg — falha rápido e claro se faltar
+      #    (foi o que quebrou a nº 10 lá na frente, depois de 41 min).
+      - name: Check FFmpeg headers (fail fast)
+        run: |
+          INC="$VCPKG_ROOT/installed/${{ matrix.include-dir }}/include"
+          for h in libavcodec/avcodec.h libavutil/attributes.h libavutil/opt.h; do
+            if [ ! -f "$INC/$h" ]; then
+              echo "FALTA header $h em $INC"
+              ls "$VCPKG_ROOT/installed/" || true
+              ls "$INC" 2>/dev/null | head -20 || true
+              exit 1
+            fi
+          done
+          echo "Headers OK em $INC"
+      # 9. Restaurar o bridge gerado no job anterior
+      - uses: actions/download-artifact@v4
+        with: { name: bridge-artifact, path: ./ }
+      # 10. Toolchain Rust 1.75 + cache POR TARGET (o cache quente da
+      #     build 4-9 volta para o arm64 com a key aarch64-linux-android)
+      - uses: dtolnay/rust-toolchain@v1
+        with: { toolchain: "1.75", components: "rustfmt" }
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: mr-acesso-remoto-lib-cache-android
+          key: ${{ matrix.target }}
+      # 11. Compilar a biblioteca Rust DESTA arquitetura e subir a .so
+      - name: Build rustdesk lib (${{ matrix.target }})
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
+          rustup target add ${{ matrix.target }}
+          cargo install cargo-ndk --version 3.1.2 --locked
+          ${{ matrix.ndk-script }}
+          mkdir -p out-lib
+          cp ./target/${{ matrix.target }}/release/liblibrustdesk.so out-lib/librustdesk.so
+      - uses: actions/upload-artifact@v4
+        with:
+          name: librustdesk-${{ matrix.jnilibs }}
+          path: out-lib/librustdesk.so
+          retention-days: 30
+  assemble-universal:
+    needs: [build-libs]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: jlumbroso/free-disk-space@v1.3.1
+        with: { tool-cache: false, android: false, dotnet: true,
+                haskell: true, large-packages: false,
+                docker-images: true, swap-storage: false }
+      - run: sudo apt-get update && sudo apt-get install -y openjdk-17-jdk-headless
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - uses: subosito/flutter-action@v2
+        with: { channel: "stable", flutter-version: "3.24.5" }
+      - run: |
+          cd $(dirname $(dirname $(which flutter)))
+          git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
+      - uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with: { ndk-version: "r28c", add-to-path: true }
+      # Bridge gerado (arquivos Dart gerados, sem eles o flutter build falha)
+      - uses: actions/download-artifact@v4
+        with: { name: bridge-artifact, path: ./ }
+      # As 3 bibliotecas compiladas nos jobs da matriz
+      - uses: actions/download-artifact@v4
+        with: { name: librustdesk-arm64-v8a, path: ./libs-arm64-v8a }
+      - uses: actions/download-artifact@v4
+        with: { name: librustdesk-armeabi-v7a, path: ./libs-armeabi-v7a }
+      - uses: actions/download-artifact@v4
+        with: { name: librustdesk-x86_64, path: ./libs-x86_64 }
+      # Montar o APK GORDO — assinatura DEBUG (teste), sem --obfuscate.
+      # SEM --split-per-abi e com as 3 plataformas: um só APK com tudo dentro.
+      - name: Build universal APK
+        shell: bash
+        env:
+          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
+          export PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH
+          sed -i "s/org.gradle.jvmargs=-Xmx1024M/org.gradle.jvmargs=-Xmx2g/g" \
+            ./flutter/android/gradle.properties
+          sed -i "s/signingConfigs.release/signingConfigs.debug/g" \
+            ./flutter/android/app/build.gradle
+          mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
+          mkdir -p ./flutter/android/app/src/main/jniLibs/armeabi-v7a
+          mkdir -p ./flutter/android/app/src/main/jniLibs/x86_64
+          cp ./libs-arm64-v8a/librustdesk.so \
+             ./flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
+          cp ./libs-armeabi-v7a/librustdesk.so \
+             ./flutter/android/app/src/main/jniLibs/armeabi-v7a/librustdesk.so
+          cp ./libs-x86_64/librustdesk.so \
+             ./flutter/android/app/src/main/jniLibs/x86_64/librustdesk.so
+          cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so \
+             ./flutter/android/app/src/main/jniLibs/arm64-v8a/
+          cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so \
+             ./flutter/android/app/src/main/jniLibs/armeabi-v7a/
+          cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so \
+             ./flutter/android/app/src/main/jniLibs/x86_64/
+          pushd flutter
+          flutter build apk --release --target-platform android-arm,android-arm64,android-x64
+          popd
+          mkdir -p out-apk
+          mv flutter/build/app/outputs/flutter-apk/app-release.apk \
+             out-apk/mr-acesso-remoto-0.1.0-universal-build11.apk
+      # Subir o APK como artefato — É AQUI QUE O APK SAI.
+      # Não há publicação em release nem na Play Store.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mr-acesso-remoto-0.1.0-universal-build11.apk
+          path: out-apk/mr-acesso-remoto-0.1.0-universal-build11.apk
+          retention-days: 30
