@@ -35,8 +35,12 @@ class HomePageState extends State<HomePage> {
 
   void refreshPages() {
     setState(() {
+      // Troca de papel: volta para a primeira aba, porque as abas mudam
+      // (o índice antigo pode não existir no novo papel).
+      _selectedIndex = 0;
       initPages();
     });
+  }
   }
 
   @override
@@ -47,15 +51,25 @@ class HomePageState extends State<HomePage> {
 
   void initPages() {
     _pages.clear();
-    if (!bind.isIncomingOnly()) {
+
+    // MR Acesso Remoto: papel escolhido na primeira abertura (mr-role).
+    // Técnico não vê o lado de ser controlado; cliente não vê o lado
+    // de controlar. Papel vazio mostra tudo (comportamento de hoje).
+    final mrRole = bind.mainGetOptionSync(key: 'mr-role');
+    final isMrClient = mrRole == 'client';
+    final isMrTechnician = mrRole == 'technician';
+
+    if (!isMrClient && !bind.isIncomingOnly()) {
       _pages.add(ConnectionPage(
         appBarActions: [],
       ));
     }
-    if (isAndroid && !bind.isOutgoingOnly()) {
+
+    if (isAndroid && !isMrTechnician && !bind.isOutgoingOnly()) {
       _chatPageTabIndex = _pages.length;
       _pages.addAll([ChatPage(type: ChatPageType.mobileMain), ServerPage()]);
     }
+
     _pages.add(SettingsPage());
   }
 
