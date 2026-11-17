@@ -542,13 +542,20 @@ class MyTheme {
           )
         : mobileTextButtonTheme,
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: MyTheme.accent,
-        foregroundColor: Colors.white,
-        disabledForegroundColor: Colors.white70,
-        disabledBackgroundColor: Colors.white10,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
+      style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.pressed)) {
+            return MyTheme.actionPressed;
+          }
+          return MyTheme.action;
+        }),
+        foregroundColor: MaterialStateProperty.all(Colors.white),
+        disabledForegroundColor: MaterialStateProperty.all(Colors.white70),
+        disabledBackgroundColor: MaterialStateProperty.all(Colors.white10),
+        shape: MaterialStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
         ),
       ),
     ),
