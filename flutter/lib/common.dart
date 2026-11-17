@@ -250,6 +250,9 @@ class MyTheme {
 
   static const Color grayBg = Color(0xFFEFEFF2);
   static const Color accent = Color(0xFFC9A227);
+  // MR Acesso Remoto: botao de acao vermelho, azul quando pressionado
+  static const Color action = Color(0xFFFF1E1E);
+  static const Color actionPressed = Color(0xFF0B5FFF);
   static const Color accent50 = Color(0x77C9A227);
   static const Color accent80 = Color(0xAAC9A227);
   static const Color canvasColor = Color(0xFF212121);
