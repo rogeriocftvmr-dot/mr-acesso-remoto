@@ -304,23 +304,34 @@ class _ConnectionPageState extends State<ConnectionPage>
   @override
   Widget build(BuildContext context) {
     final isOutgoingOnly = bind.isOutgoingOnly();
+    // MR Acesso Remoto: papel escolhido na primeira abertura (mr-role).
+    // Cliente não vê o lado de conectar; técnico não vê o painel de status.
+    final mrRole = bind.mainGetOptionSync(key: 'mr-role');
+    final isMrClient = mrRole == 'client';
+    final isMrTechnician = mrRole == 'technician';
     return Column(
       children: [
-        Expanded(
-            child: Column(
-          children: [
-            Row(
-              children: [
-                Flexible(child: _buildRemoteIDTextField(context)),
-              ],
-            ).marginOnly(top: 22),
-            SizedBox(height: 12),
-            Divider().paddingOnly(right: 12),
-            Expanded(child: PeerTabPage()),
-          ],
-        ).paddingOnly(left: 12.0)),
-        if (!isOutgoingOnly) const Divider(height: 1),
-        if (!isOutgoingOnly) OnlineStatusWidget()
+        if (!isMrClient)
+          Expanded(
+              child: Column(
+            children: [
+              Row(
+                children: [
+                  Flexible(child: _buildRemoteIDTextField(context)),
+                ],
+              ).marginOnly(top: 22),
+
+              SizedBox(height: 12),
+
+              Divider().paddingOnly(right: 12),
+
+              Expanded(child: PeerTabPage()),
+            ],
+          ).paddingOnly(left: 12.0)),
+
+        if (!isOutgoingOnly && !isMrTechnician) const Divider(height: 1),
+
+        if (!isOutgoingOnly && !isMrTechnician) OnlineStatusWidget()
       ],
     );
   }
