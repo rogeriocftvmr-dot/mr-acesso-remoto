@@ -1168,7 +1168,7 @@ Widget createDialogContent(String text) {
     spans.add(TextSpan(
       text: match.group(0) ?? '',
       style: const TextStyle(
-        color: Colors.blue,
+        color: MyTheme.action,
         decoration: TextDecoration.underline,
       ),
       recognizer: TapGestureRecognizer()
