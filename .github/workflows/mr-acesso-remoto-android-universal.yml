@@ -1,5 +1,5 @@
 name: MR Acesso Remoto — APK Android universal
-# BUILD Nº 11 (retry da nº 10) — 17/11 12:20
+# BUILD Nº 12 — 17/11 (seletor Técnico/Cliente + assinatura fixa MR; a nº 11 foi o retry da nº 10)
 # A nº 10 FALHOU no passo "Build rustdesk libs": o hwcodec (aarch64) não achou
 # os headers do FFmpeg (libavcodec/avcodec.h, libavutil/attributes.h,
 # libavutil/opt.h) embora o include -I /opt/artifacts/vcpkg/installed/
@@ -15,7 +15,7 @@ name: MR Acesso Remoto — APK Android universal
 # que funcionou 6 vezes. Cada job instala as deps da sua ABI, VERIFICA os
 # headers (falha rápido e claro se faltar), compila a sua .so e sobe como
 # artefato. Um job final junta as 3 .so e monta o APK gordo.
-# Nenhuma mudança no código — só o workflow. Visual v2 já está na master.
+# Nº 12: o código muda (seletor mr-role) + assinatura fixa MR (keystore dos Secrets).
 on:
   workflow_dispatch: {}
 permissions:
@@ -159,7 +159,18 @@ jobs:
         with: { name: librustdesk-armeabi-v7a, path: ./libs-armeabi-v7a }
       - uses: actions/download-artifact@v4
         with: { name: librustdesk-x86_64, path: ./libs-x86_64 }
-      # Montar o APK GORDO — assinatura DEBUG (teste), sem --obfuscate.
+
+      # Assinatura FIXA MR — keystore próprio (Secrets), igual em toda build.
+      # O build.gradle já lê key.properties (storeFile/keyAlias/keyPassword/
+      # storePassword); sem ele o release não assina.
+      - name: Assinatura fixa MR (keystore)
+        run: |
+          echo "${{ secrets.MR_KEYSTORE_BASE64 }}" | base64 -d > flutter/android/app/keystore.p12
+          printf 'storeFile=keystore.p12\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "${{ secrets.MR_KEYSTORE_PASSWORD }}" "${{ secrets.MR_KEY_ALIAS }}" "${{ secrets.MR_KEYSTORE_PASSWORD }}" > flutter/android/key.properties
+          openssl pkcs12 -info -noout -passin pass:"${{ secrets.MR_KEYSTORE_PASSWORD }}" -in flutter/android/app/keystore.p12
+          ls -l flutter/android/app/keystore.p12 flutter/android/key.properties
+
+      # Montar o APK GORDO — assinatura FIXA MR (keystore dos Secrets), sem --obfuscate.
       # SEM --split-per-abi e com as 3 plataformas: um só APK com tudo dentro.
       - name: Build universal APK
         shell: bash
@@ -171,8 +182,7 @@ jobs:
           export PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH
           sed -i "s/org.gradle.jvmargs=-Xmx1024M/org.gradle.jvmargs=-Xmx2g/g" \
             ./flutter/android/gradle.properties
-          sed -i "s/signingConfigs.release/signingConfigs.debug/g" \
-            ./flutter/android/app/build.gradle
+
           mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
           mkdir -p ./flutter/android/app/src/main/jniLibs/armeabi-v7a
           mkdir -p ./flutter/android/app/src/main/jniLibs/x86_64
@@ -193,11 +203,11 @@ jobs:
           popd
           mkdir -p out-apk
           mv flutter/build/app/outputs/flutter-apk/app-release.apk \
-             out-apk/mr-acesso-remoto-0.1.0-universal-build11.apk
+             out-apk/mr-acesso-remoto-0.1.0-universal-build12.apk
       # Subir o APK como artefato — É AQUI QUE O APK SAI.
       # Não há publicação em release nem na Play Store.
       - uses: actions/upload-artifact@v4
         with:
-          name: mr-acesso-remoto-0.1.0-universal-build11.apk
-          path: out-apk/mr-acesso-remoto-0.1.0-universal-build11.apk
+          name: mr-acesso-remoto-0.1.0-universal-build12.apk
+          path: out-apk/mr-acesso-remoto-0.1.0-universal-build12.apk
           retention-days: 30
