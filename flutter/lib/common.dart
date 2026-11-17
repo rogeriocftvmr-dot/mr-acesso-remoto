@@ -544,14 +544,20 @@ class MyTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ButtonStyle(
         backgroundColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.disabled)) {
+            return Colors.white10;
+          }
           if (states.contains(MaterialState.pressed)) {
             return MyTheme.actionPressed;
           }
           return MyTheme.action;
         }),
-        foregroundColor: MaterialStateProperty.all(Colors.white),
-        disabledForegroundColor: MaterialStateProperty.all(Colors.white70),
-        disabledBackgroundColor: MaterialStateProperty.all(Colors.white10),
+        foregroundColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.disabled)) {
+            return Colors.white70;
+          }
+          return Colors.white;
+        }),
         shape: MaterialStateProperty.all(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
