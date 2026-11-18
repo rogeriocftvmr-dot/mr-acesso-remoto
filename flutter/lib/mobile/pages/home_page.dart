@@ -51,10 +51,10 @@ class HomePageState extends State<HomePage> {
   void initPages() {
     _pages.clear();
 
-    // MR Acesso Remoto: papel escolhido na primeira abertura (mr-role).
-    // Técnico não vê o lado de ser controlado; cliente não vê o lado
-    // de controlar. Papel vazio mostra tudo (comportamento de hoje).
-    final mrRole = bind.mainGetOptionSync(key: 'mr-role');
+    /// MR Acesso Remoto: no celular só existe o técnico (o cliente é o
+    // PC). Força técnico aqui mesmo que a opção guardada diga outra
+    // coisa (ex.: 'client' escolhido na build nº 14).
+    final mrRole = 'technician';
     final isMrClient = mrRole == 'client';
     final isMrTechnician = mrRole == 'technician';
 
