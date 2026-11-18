@@ -41,7 +41,6 @@ class HomePageState extends State<HomePage> {
       initPages();
     });
   }
-  }
 
   @override
   void initState() {
