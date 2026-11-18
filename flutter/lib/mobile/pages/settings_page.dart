@@ -286,49 +286,6 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
     }
   }
 
-  /// MR Acesso Remoto: rótulo do papel atual ('mr-role').
-  String get _mrRoleLabel {
-    final role = bind.mainGetOptionSync(key: 'mr-role');
-    if (role == 'technician') return 'Técnico';
-    if (role == 'client') return 'Cliente';
-    return 'Escolher';
-  }
-
-  /// MR Acesso Remoto: diálogo para trocar o papel (técnico/cliente).
-  /// Depois de trocar, as abas da tela inicial são remontadas.
-  void _showRoleDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Como você vai usar?'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text('Sou técnico'),
-              subtitle: Text('Vou controlar outros aparelhos'),
-              onTap: () async {
-                await bind.mainSetOption(key: 'mr-role', value: 'technician');
-                HomePage.homeKey.currentState?.refreshPages();
-                Navigator.of(context).pop();
-                setState(() {});
-              },
-            ),
-            ListTile(
-              title: Text('Sou cliente'),
-              subtitle: Text('Vou deixar o técnico me ajudar'),
-              onTap: () async {
-                await bind.mainSetOption(key: 'mr-role', value: 'client');
-                HomePage.homeKey.currentState?.refreshPages();
-                Navigator.of(context).pop();
-                setState(() {});
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
