@@ -484,17 +484,21 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     stateGlobal.isPortrait.value = orientation == Orientation.portrait;
   }
 
-    /// MR Acesso Remoto: mostra o seletor Técnico/Cliente na primeira
-  /// abertura (opção 'mr-role' vazia). Depois de escolhido, mostra a
-  /// tela normal. No desktop vale o mesmo papel.
+  /// MR Acesso Remoto: no celular só existe o técnico — nunca mostra
+  /// o seletor no mobile (o cliente é o PC, com o programa do Windows).
+  /// No desktop vale o seletor Técnico/Cliente na primeira abertura.
   Widget _mrRoleHome(Widget mainHome) {
+    if (!isDesktop) {
+      bind.mainSetOption(key: 'mr-role', value: 'technician');
+      return mainHome;
+    }
     final role = bind.mainGetOptionSync(key: 'mr-role');
     if (role == 'technician' || role == 'client') {
       return mainHome;
     }
     return RolePickerPage(
       onPicked: () => setState(() {}),
-    );
+  );
   }
 
   @override
