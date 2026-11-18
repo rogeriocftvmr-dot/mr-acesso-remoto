@@ -781,20 +781,6 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
       sections: [
         customClientSection,
 
-        SettingsSection(
-          title: Text('MR Acesso Remoto'),
-          tiles: [
-            SettingsTile.navigation(
-              leading: Icon(Icons.person),
-              title: Text('Como você vai usar'),
-              description: Text(_mrRoleLabel),
-              trailing: Icon(Icons.arrow_forward_ios),
-              onPressed: (context) {
-                _showRoleDialog(context);
-              },
-            ),
-          ],
-        ),
 
         if (!bind.isDisableAccount())
           SettingsSection(
