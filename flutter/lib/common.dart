@@ -649,7 +649,8 @@ class MyTheme {
       case "dark":
         return ThemeMode.dark;
       default:
-        return ThemeMode.system;
+        // MR Acesso Remoto: escuro por padrão (padrão v2: fundo preto, dourado).
+                    return ThemeMode.dark;
     }
   }
 }
