@@ -606,14 +606,10 @@ pub fn set_share_rdp(_enable: bool) {
 }
 
 #[inline]
+// MR Acesso Remoto: sem comparação de versão com o RustDesk original.
+// O programa MR nunca se considera "versão desatualizada".
 pub fn is_installed_lower_version() -> bool {
-    #[cfg(not(windows))]
-    return false;
-    #[cfg(windows)]
-    {
-        let b = crate::platform::windows::get_reg("BuildDate");
-        return crate::BUILD_DATE.cmp(&b).is_gt();
-    }
+    false
 }
 
 #[inline]
