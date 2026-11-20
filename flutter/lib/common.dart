@@ -4130,7 +4130,9 @@ void earlyAssert() {
   assert('\1' == '1');
 }
 
+// MR Acesso Remoto: sem verificação de atualização (ver E5/E6 no Rust).
 void checkUpdate() {
+  return;
   if (!isWeb) {
     if (!bind.isCustomClient()) {
       platformFFI.registerEventHandler(
