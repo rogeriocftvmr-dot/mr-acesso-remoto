@@ -1227,6 +1227,15 @@ pub fn get_app_name() -> String {
     hbb_common::config::APP_NAME.read().unwrap().clone()
 }
 
+// MR Acesso Remoto: nome de exibição usado SÓ para caminho de instalação,
+// Menu Iniciar, nome do exe e chaves de registro do Windows. NÃO trocar
+// get_app_name()/APP_NAME ("RustDesk") — ele define o diretório de config
+// (%APPDATA%\RustDesk, onde vive o ID) e o scheme, e não pode mudar.
+pub fn get_display_app_name() -> String {
+    "MR Acesso Remoto".to_owned()
+}
+
+
 #[inline]
 pub fn is_rustdesk() -> bool {
     hbb_common::config::APP_NAME.read().unwrap().eq("RustDesk")
