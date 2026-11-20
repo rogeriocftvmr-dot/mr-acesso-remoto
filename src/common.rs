@@ -1231,7 +1231,6 @@ pub fn get_display_app_name() -> String {
     "MR Acesso Remoto".to_owned()
 }
 
-
 #[inline]
 pub fn is_rustdesk() -> bool {
     hbb_common::config::APP_NAME.read().unwrap().eq("RustDesk")
