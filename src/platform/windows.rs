@@ -4201,7 +4201,7 @@ pub fn message_box(text: &str) {
         .encode_utf16()
         .chain(std::iter::once(0))
         .collect::<Vec<u16>>();
-    let caption = "RustDesk Output"
+    let caption = "MR Acesso Remoto"
         .encode_utf16()
         .chain(std::iter::once(0))
         .collect::<Vec<u16>>();
