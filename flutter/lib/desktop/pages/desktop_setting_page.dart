@@ -2595,6 +2595,10 @@ class _AboutState extends State<_About> {
               const SizedBox(
                 height: 8.0,
               ),
+              Align(
+                  alignment: Alignment.center,
+                child: loadIcon(64),
+            ),
               SelectionArea(
                   child: Text('${translate('Version')}: $version')
                       .marginSymmetric(vertical: 4.0)),
