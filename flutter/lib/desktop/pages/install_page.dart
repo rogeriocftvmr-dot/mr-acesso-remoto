@@ -163,6 +163,10 @@ class _InstallPageBodyState extends State<_InstallPageBody>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+                Align(
+                    alignment: Alignment.center,
+                  child: loadIcon(96),
+              ),
               Text(translate('Installation'),
                   style: Theme.of(context).textTheme.headlineMedium),
               Table(
