@@ -200,7 +200,7 @@ jobs:
         run: |
           cp -r ./rustdesk ./rustdesk-msi
           pushd ./res/msi
-          python preprocess.py --arp --app-name "MR Acesso Remoto" -v ${{ env.VERSION }} -d ../../rustdesk-msi
+          python preprocess.py --arp --app-name "MR Acesso Remoto" -m "MR Sem Limites" --custom-arp '{"Contact": {"msi": "ARPCONTACT", "v": "https://acesso.mrsemlimites.com.br"}, "HelpLink": {"msi": "ARPHELPLINK", "v": "https://acesso.mrsemlimites.com.br"}, "ReadMe": {"msi": "ARPREADME", "v": "https://acesso.mrsemlimites.com.br"}}' -v ${{ env.VERSION }} -d ../../rustdesk-msi
           nuget restore msi.sln
           msbuild msi.sln -p:Configuration=Release -p:Platform=x64 /p:TargetVersion=Windows10
           $msi = Get-ChildItem ./Package/bin/*/Release/en-us/Package.msi | Select-Object -First 1
