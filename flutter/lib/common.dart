@@ -3885,7 +3885,14 @@ class _LogoState extends State<_Logo> {
 
 // max 300 x 60
 Widget loadLogo() => const _Logo();
-
+// MR Acesso Remoto: águia grande na janela principal (destaque da marca).
+Widget loadLogoBig() => Container(
+          constraints: const BoxConstraints(maxWidth: 260, maxHeight: 220),
+    child: Image.asset('assets/logo_dark.png',
+                           fit: BoxFit.contain,
+                       errorBuilder: (ctx, error, stackTrace) =>
+                                         Image.asset('assets/logo.png', fit: BoxFit.contain)),
+        ).marginOnly(left: 12, right: 12, top: 16, bottom: 8);
 Widget loadIcon(double size) {
   return Image.asset('assets/icon.png',
       width: size,
