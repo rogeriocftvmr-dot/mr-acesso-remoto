@@ -230,6 +230,8 @@ class _InstallPageBodyState extends State<_InstallPageBody>
                         children: [
                           Text(translate('agreement_tip'))
                               .marginOnly(bottom: em),
+                        ],
+                      )
                     ],
                   )).marginSymmetric(vertical: 2 * em),
               Row(
