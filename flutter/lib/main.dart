@@ -131,6 +131,8 @@ Future<void> initEnv(String appType) async {
         key: 'relay-server', value: 'acesso.mrsemlimites.com.br');
   await bind.mainSetOption(
         key: 'key', value: 'qO+w47M9dOPFJA8S6n2xiQXze5AqnBDqFALFPgjwna0=');
+  // MR Acesso Remoto: audio sempre habilitado ao abrir (sem pedir nada ao cliente)
+    await bind.mainSetOption(key: 'enable-audio', value: 'Y');
   // await Firebase.initializeApp();
   _registerEventHandler();
   // Update the system theme.
