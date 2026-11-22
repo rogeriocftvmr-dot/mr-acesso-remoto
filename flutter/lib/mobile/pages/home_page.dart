@@ -46,6 +46,18 @@ class HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     initPages();
+    // MR Acesso Remoto: pede o microfone ao abrir (voz nos dois sentidos sem erro)
+      _requestMicrophonePermission();
+  }
+
+  // Pede a permissao de microfone ao abrir o app, se ainda nao foi concedida.
+  Future<void> _requestMicrophonePermission() async {
+      if (!isAndroid) return;
+      final granted =
+              await AndroidPermissionManager.check('android.permission.RECORD_AUDIO');
+      if (!granted) {
+            await AndroidPermissionManager.request('android.permission.RECORD_AUDIO');
+      }
   }
 
   void initPages() {
