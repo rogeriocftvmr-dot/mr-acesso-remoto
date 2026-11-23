@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_hbb/common/widgets/connection_page_title.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/widgets/popup_menu.dart';
 import 'package:flutter_hbb/models/state_model.dart';
@@ -319,13 +318,33 @@ class _ConnectionPageState extends State<ConnectionPage>
                 children: [
                   Flexible(child: _buildRemoteIDTextField(context)),
                 ],
-              ).marginOnly(top: 22),
-
-              SizedBox(height: 12),
-
-              Divider().paddingOnly(right: 12),
-
-              Expanded(child: PeerTabPage()),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius:
+                        const BorderRadius.all(Radius.circular(13)),
+                    border: Border.all(color: MyTheme.accent),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Sessões recentes',
+                        style: TextStyle(
+                          color: MyTheme.accent,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(child: PeerTabPage()),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ).paddingOnly(left: 12.0)),
 
@@ -388,15 +407,22 @@ class _ConnectionPageState extends State<ConnectionPage>
   /// Search for a peer.
   Widget _buildRemoteIDTextField(BuildContext context) {
     var w = Container(
-      width: 320 + 20 * 2,
+      width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
       decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(13)),
-          border: Border.all(color: Theme.of(context).colorScheme.background)),
+          border: Border.all(color: MyTheme.accent)),
       child: Ink(
         child: Column(
           children: [
-            getConnectionPageTitle(context, false).marginOnly(bottom: 15),
+            const Text(
+              'Conectar a um computador',
+              style: TextStyle(
+                color: MyTheme.accent,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ).marginOnly(bottom: 15),
             Row(
               children: [
                 Expanded(
@@ -561,20 +587,27 @@ class _ConnectionPageState extends State<ConnectionPage>
             ),
             Padding(
               padding: const EdgeInsets.only(top: 13.0),
-              child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                SizedBox(
-                  height: 28.0,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      onConnect();
-                    },
-                    child: Text(translate("Connect")),
+              child: Row(children): [
+                Expanded(
+                  child: SizedBox(
+                    height: 48.0,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: MyTheme.action,
+                      ),
+                      onPressed: () {
+                        onConnect();
+                      },
+                      child: Text(translate("Connect"),
+                          style: const TextStyle(
+                              fontSize: 17, fontWeight: FontWeight.bold)),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  height: 28.0,
-                  width: 28.0,
+                  height: 48.0,
+                  width: 48.0,
                   decoration: BoxDecoration(
                     border: Border.all(color: Theme.of(context).dividerColor),
                     borderRadius: BorderRadius.circular(8),
