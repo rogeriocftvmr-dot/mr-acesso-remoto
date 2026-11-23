@@ -13,6 +13,7 @@ import 'package:flutter_hbb/desktop/pages/connection_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
 import 'package:flutter_hbb/desktop/widgets/update_progress.dart';
+import 'package:flutter_hbb/mobile/pages/role_picker_page.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/server_model.dart';
 import 'package:flutter_hbb/models/state_model.dart';
@@ -92,6 +93,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       buildTip(context),
       if (!isOutgoingOnly) buildIDBoard(context),
       if (!isOutgoingOnly) buildPasswordBoard(context),
+      _buildRoleSwitchButton(context),
           ];
     if (isIncomingOnly) {
       children.addAll([
@@ -155,6 +157,35 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                 ),
               )
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleSwitchButton(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 20.0, right: 16, top: 4, bottom: 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => RolePickerPage(
+                  onPicked: () {
+                    Navigator.of(context).pop();
+                    Get.forceAppUpdate();
+                  },
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.swap_horiz,
+              size: 18, color: Color(0xFFC9A227)),
+          label: const Text(
+            'Trocar papel',
+            style: TextStyle(color: Color(0xFFC9A227), fontSize: 13),
+          ),
         ),
       ),
     );
