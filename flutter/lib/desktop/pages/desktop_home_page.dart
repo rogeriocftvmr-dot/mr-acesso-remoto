@@ -61,12 +61,22 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     super.build(context);
     final isIncomingOnly = bind.isIncomingOnly();
     return _buildBlock(
-        child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
       children: [
-        buildLeftPane(context),
-        if (!isIncomingOnly) const VerticalDivider(width: 1),
-        if (!isIncomingOnly) Expanded(child: buildRightPane(context)),
+        _buildTopBar(context),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _buildYourComputerCard(context)),
+                if (!isIncomingOnly) const SizedBox(width: 12),
+                if (!isIncomingOnly) Expanded(child: buildRightPane(context)),
+              ],
+            ),
+          ),
+        ),
       ],
     ));
   }
@@ -93,7 +103,6 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       buildTip(context),
       if (!isOutgoingOnly) buildIDBoard(context),
       if (!isOutgoingOnly) buildPasswordBoard(context),
-      _buildRoleSwitchButton(context),
           ];
     if (isIncomingOnly) {
       children.addAll([
@@ -162,30 +171,182 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     );
   }
 
-  Widget _buildRoleSwitchButton(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 20.0, right: 16, top: 4, bottom: 8),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: TextButton.icon(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => RolePickerPage(
-                  onPicked: () {
-                    Navigator.of(context).pop();
-                    Get.forceAppUpdate();
-                  },
-                ),
-              ),
-            );
-          },
-          icon: const Icon(Icons.swap_horiz,
-              size: 18, color: Color(0xFFC9A227)),
-          label: const Text(
-            'Trocar papel',
-            style: TextStyle(color: Color(0xFFC9A227), fontSize: 13),
+  Widget _buildTopBar(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: MyTheme.accent, width: 1)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              'assets/icon.png',
+              height: 40,
+              width: 40,
+              fit: BoxFit.cover,
+            ),
           ),
+          const SizedBox(width: 12),
+          const Text(
+            'MR Acesso Remoto',
+            style: TextStyle(
+              color: MyTheme.accent,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Spacer(),
+          _buildStatusPill(context),
+          const SizedBox(width: 12),
+          TextButton(
+            onPressed: _openRolePicker,
+            child: const Text('Trocar papel'),
+          ),
+          _buildThemeButton(context),
+          IconButton(
+            icon: const Icon(Icons.settings, color: MyTheme.accent),
+            tooltip: 'Configurações',
+            onPressed: DesktopTabPage.onAddSetting,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusPill(BuildContext context) {
+    final svcStopped = Get.find<RxBool>(tag: 'stop-service');
+    return Obx(() {
+      final stopped = svcStopped.value;
+      final status = stateGlobal.svcStatus.value;
+      final Color color = stopped || status == SvcStatus.connecting
+          ? kColorWarn
+          : (status == SvcStatus.ready
+              ? const Color.fromARGB(255, 50, 190, 166)
+              : const Color.fromARGB(255, 224, 79, 95));
+      final String text = stopped
+          ? translate("Service is not running")
+          : status == SvcStatus.connecting
+              ? translate("connecting_status")
+              : status == SvcStatus.notReady
+                  ? translate("not_ready_status")
+                  : translate('Ready');
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(color: Colors.white, fontSize: 13),
+        ),
+      );
+    });
+  }
+
+  Widget _buildThemeButton(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return IconButton(
+      icon: Icon(
+        isDark ? Icons.light_mode : Icons.dark_mode,
+        color: MyTheme.accent,
+      ),
+      tooltip: isDark ? 'Tela clara' : 'Tela escura',
+      onPressed: () async {
+        await MyTheme.changeDarkMode(
+            isDark ? ThemeMode.light : ThemeMode.dark);
+      },
+    );
+  }
+
+  void _openRolePicker() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RolePickerPage(
+          onPicked: () {
+            Navigator.of(context).pop();
+            Get.forceAppUpdate();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildYourComputerCard(BuildContext context) {
+    final isIncomingOnly = bind.isIncomingOnly();
+    final isOutgoingOnly = bind.isOutgoingOnly();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF121212) : Colors.white,
+        borderRadius: const BorderRadius.all(Radius.circular(13)),
+        border: Border.all(color: MyTheme.accent),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      child: SingleChildScrollView(
+        controller: _leftPaneScrollController,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Seu Computador',
+              style: TextStyle(
+                color: MyTheme.accent,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (!isOutgoingOnly) buildPresetPasswordWarning(),
+            if (bind.isCustomClient())
+              Align(
+                alignment: Alignment.center,
+                child: loadPowered(context),
+              ),
+            Align(
+              alignment: Alignment.center,
+              child: loadLogoBig(),
+            ),
+            if (!isOutgoingOnly) buildIDBoard(context),
+            if (!isOutgoingOnly) buildPasswordBoard(context),
+            if (!isOutgoingOnly)
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: MyTheme.action,
+                      ),
+                      onPressed: () => setPasswordDialog(),
+                      child: const Text('Definir senha'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(
+                            text: gFFI.serverModel.serverId.text));
+                        showToast(translate("Copied"));
+                      },
+                      child: const Text('Copiar ID'),
+                    ),
+                  ),
+                ],
+              ).marginOnly(top: 4),
+            if (isIncomingOnly)
+              OnlineStatusWidget(
+                onSvcStatusChanged: () {
+                  if (isInHomePage()) {
+                    Future.delayed(Duration(milliseconds: 300), () {
+                      _updateWindowSize();
+                    });
+                  }
+                },
+              ).marginOnly(top: 8),
+          ],
         ),
       ),
     );
