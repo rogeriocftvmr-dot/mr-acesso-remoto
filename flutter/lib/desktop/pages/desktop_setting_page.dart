@@ -14,6 +14,7 @@ import 'package:flutter_hbb/common/widgets/keyboard_shortcuts/page_body.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_keyboard_shortcuts_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
 import 'package:flutter_hbb/desktop/widgets/remote_toolbar.dart';
+import 'package:flutter_hbb/mobile/pages/role_picker_page.dart';
 import 'package:flutter_hbb/mobile/widgets/dialog.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/printer_model.dart';
@@ -417,6 +418,7 @@ class _GeneralState extends State<_General> {
       children: [
         if (!isWeb) service(),
         theme(),
+        mrRoleCard(),
         _Card(title: 'Language', children: [language()]),
         if (!isWeb) hwcodec(),
         if (!isWeb) audio(context),
@@ -490,6 +492,45 @@ class _GeneralState extends State<_General> {
           groupValue: current,
           label: 'Follow System',
           onChanged: isOptFixed ? null : onChanged),
+    ]);
+  }
+
+  String _mrRoleLabel() {
+    final role = bind.mainGetOptionSync(key: 'mr-role');
+    if (role == 'client') return 'Cliente';
+    return 'Técnico';
+  }
+
+  void _openRolePicker() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RolePickerPage(
+          onPicked: () {
+            Navigator.of(context).pop();
+            Get.forceAppUpdate();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget mrRoleCard() {
+    return _Card(title: 'MR Acesso Remoto', children: [
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Você está usando como: ${_mrRoleLabel()}',
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: _openRolePicker,
+            child: const Text('Trocar papel'),
+          ),
+        ],
+      ),
     ]);
   }
 
