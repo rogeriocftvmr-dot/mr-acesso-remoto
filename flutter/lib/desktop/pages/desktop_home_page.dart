@@ -1120,12 +1120,25 @@ void setPasswordDialog({VoidCallback? notEmptyCallback}) async {
             ),
             Row(
               children: [
-                Expanded(
-                  child: TextField(
-                    obscureText: true,
+                child: TextField(
+                    obscureText: !showPass0,
                     decoration: InputDecoration(
                         labelText: translate('Password'),
-                        errorText: errMsg0.isNotEmpty ? errMsg0 : null),
+                        errorText: errMsg0.isNotEmpty ? errMsg0 : null,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            showPass0
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: MyTheme.accent,
+                          ),
+                          tooltip: showPass0
+                              ? 'Ocultar senha'
+                              : 'Mostrar senha',
+                          onPressed: () => setState(() {
+                            showPass0 = !showPass0;
+                          }),
+                        )),
                     controller: p0,
                     autofocus: true,
                     onChanged: (value) {
