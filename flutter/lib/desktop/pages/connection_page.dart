@@ -587,7 +587,7 @@ class _ConnectionPageState extends State<ConnectionPage>
             ),
             Padding(
               padding: const EdgeInsets.only(top: 13.0),
-              child: Row(children): [
+              child: Row(children: [
                 Expanded(
                   child: SizedBox(
                     height: 48.0,
