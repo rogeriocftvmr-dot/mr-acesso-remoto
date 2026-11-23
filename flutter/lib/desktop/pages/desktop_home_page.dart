@@ -857,6 +857,9 @@ void setPasswordDialog({VoidCallback? notEmptyCallback}) async {
     MinCharactersValidationRule(8),
   ];
   final maxLength = bind.mainMaxEncryptLen();
+  // MR Acesso Remoto: olhinho para mostrar/ocultar a senha digitada.
+  var showPass0 = false;
+  var showPass1 = false;
   final statusTip = localPasswordSet
       ? translate('password-hidden-tip')
       : (presetPassword ? translate('preset-password-in-use-tip') : '');
