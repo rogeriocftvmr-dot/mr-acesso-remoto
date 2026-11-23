@@ -1120,7 +1120,8 @@ void setPasswordDialog({VoidCallback? notEmptyCallback}) async {
             ),
             Row(
               children: [
-                child: TextField(
+                Expanded(
+                  child: TextField(
                     obscureText: !showPass0,
                     decoration: InputDecoration(
                         labelText: translate('Password'),
