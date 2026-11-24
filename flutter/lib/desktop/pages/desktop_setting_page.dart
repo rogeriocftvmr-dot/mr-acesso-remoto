@@ -528,7 +528,7 @@ class _GeneralState extends State<_General> {
       if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => LicensePage(
+          builder: (_) => MrLicensePage(
             onActivated: () {
               Navigator.of(context).pop();
               Get.forceAppUpdate();
