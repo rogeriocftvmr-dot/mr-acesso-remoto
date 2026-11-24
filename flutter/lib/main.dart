@@ -499,7 +499,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       return mainHome;
     }
     if (!LicenseService.hasValidStoredKey()) {
-      return LicensePage(
+      return MrLicensePage(
         onActivated: () => setState(() {}),
         onClient: () async {
           await bind.mainSetOption(key: 'mr-role', value: 'client');
