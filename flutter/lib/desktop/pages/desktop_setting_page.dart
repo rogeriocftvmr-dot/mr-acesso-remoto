@@ -15,6 +15,8 @@ import 'package:flutter_hbb/desktop/pages/desktop_keyboard_shortcuts_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
 import 'package:flutter_hbb/desktop/widgets/remote_toolbar.dart';
 import 'package:flutter_hbb/mobile/pages/role_picker_page.dart';
+import '../../license/license_page.dart';
+import '../../license/mr_license.dart';
 import 'package:flutter_hbb/mobile/widgets/dialog.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/printer_model.dart';
@@ -514,7 +516,34 @@ class _GeneralState extends State<_General> {
     );
   }
 
-  Widget mrRoleCard() {
+    String _licenseLabel() {
+    final exp = LicenseService.storedExpiry();
+    if (exp == null) return 'Licença: nenhuma chave';
+    return 'Licença: ativa até ${exp.day.toString().padLeft(2, '0')}/${exp.month.toString().padLeft(2, '0')}/${exp.year}';
+    }
+
+  void _openLicensePage() {
+      () async {
+      await LicenseService.clear();
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => LicensePage(
+            onActivated: () {
+              Navigator.of(context).pop();
+              Get.forceAppUpdate();
+            },
+            onClient: () {
+              Navigator.of(context).pop();
+              Get.forceAppUpdate();
+            },
+          ),
+        ),
+      );
+      }();
+  }
+  
+      Widget mrRoleCard() {
     return _Card(title: 'MR Acesso Remoto', children: [
       Row(
         children: [
@@ -529,8 +558,24 @@ class _GeneralState extends State<_General> {
             onPressed: _openRolePicker,
             child: const Text('Trocar papel'),
           ),
-        ],
+      ],
       ),
+      const SizedBox(height: 12),
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              _licenseLabel(),
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: _openLicensePage,
+            child: const Text('Trocar chave'),
+          ),
+        ],
+      ),        
     ]);
   }
 
