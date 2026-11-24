@@ -6,21 +6,21 @@ import 'mr_license.dart';
 /// MR Acesso Remoto: tela da chave de licença — a PRIMEIRA tela do
 /// programa (antes do seletor Técnico/Cliente), para o técnico.
 /// O cliente entra pelo link "Sou cliente", sem chave.
-class LicensePage extends StatefulWidget {
-  final VoidCallback onActivated;
+class MrLicensePage extends StatefulWidget {
+  final Mr onActivated;
   final VoidCallback onClient;
 
-  const LicensePage({
+  const MrLicensePage({
     Key? key,
     required this.onActivated,
     required this.onClient,
   }) : super(key: key);
 
   @override
-  State<LicensePage> createState() => _LicensePageState();
+  State<MrLicensePage> createState() => _MrLicensePageState();
 }
 
-class _LicensePageState extends State<LicensePage> {
+class _MrLicensePageState extends State<MrLicensePage> {
   final _keyController = TextEditingController();
   final _emailController = TextEditingController();
   String? _error;
