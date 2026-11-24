@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 
 import '../common.dart';
+import '../models/platform_model.dart';
 
 /// MR Acesso Remoto: módulo de licença — UM SÓ ponto de verificação.
 /// A chave é validada no painel Gestão de Licenças (Aurora) pelo endpoint
