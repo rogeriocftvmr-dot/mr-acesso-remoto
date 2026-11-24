@@ -7,7 +7,7 @@ import 'mr_license.dart';
 /// programa (antes do seletor Técnico/Cliente), para o técnico.
 /// O cliente entra pelo link "Sou cliente", sem chave.
 class MrLicensePage extends StatefulWidget {
-  final Mr onActivated;
+  final VoidCallback onActivated;
   final VoidCallback onClient;
 
   const MrLicensePage({
