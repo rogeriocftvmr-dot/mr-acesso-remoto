@@ -26,6 +26,8 @@ import 'package:window_manager/window_manager.dart';
 import 'common.dart';
 import 'consts.dart';
 import 'mobile/pages/home_page.dart'; import 'mobile/pages/role_picker_page.dart';
+import 'license/license_page.dart';
+import 'license/mr_license.dart';
 import 'mobile/pages/server_page.dart';
 import 'mobile/widgets/deploy_dialog.dart';
 import 'models/platform_model.dart';
@@ -486,21 +488,35 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     stateGlobal.isPortrait.value = orientation == Orientation.portrait;
   }
 
-  /// MR Acesso Remoto: no celular só existe o técnico — nunca mostra
+  /// MR Acesso Remoto: a chave de licença vem primeiro — sem chave
+  /// guardada válida, o técnico vê a tela da chave. O cliente nunca
+  /// precisa de chave. No celular só existe o técnico — nunca mostra
   /// o seletor no mobile (o cliente é o PC, com o programa do Windows).
   /// No desktop vale o seletor Técnico/Cliente na primeira abertura.
   Widget _mrRoleHome(Widget mainHome) {
+    final role = bind.mainGetOptionSync(key: 'mr-role');
+    if (role == 'client') {
+      return mainHome;
+    }
+    if (!LicenseService.hasValidStoredKey()) {
+      return LicensePage(
+        onActivated: () => setState(() {}),
+        onClient: () async {
+          await bind.mainSetOption(key: 'mr-role', value: 'client');
+          setState(() {});
+        },
+      );
+    }
     if (!isDesktop) {
       bind.mainSetOption(key: 'mr-role', value: 'technician');
       return mainHome;
     }
-    final role = bind.mainGetOptionSync(key: 'mr-role');
-    if (role == 'technician' || role == 'client') {
+    if (role == 'technician') {
       return mainHome;
     }
     return RolePickerPage(
       onPicked: () => setState(() {}),
-  );
+    );
   }
 
   @override
