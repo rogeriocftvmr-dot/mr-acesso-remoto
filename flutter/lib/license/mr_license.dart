@@ -114,11 +114,11 @@ class LicenseService {
         return LicenseResult(
             allowed: false, reason: 'expirada', expiraEm: expiraEm);
       }
-      if (!premium || tipo != 'premium') {
+      if (tipo != 'teste' && (!premium || tipo != 'premium')) {
         return LicenseResult(
             allowed: false, reason: 'trial', expiraEm: expiraEm);
       }
-      if (!hasProduct) {
+            if (tipo != 'teste' && !hasProduct) {
         return LicenseResult(
             allowed: false, reason: 'sem_produto', expiraEm: expiraEm);
       }
