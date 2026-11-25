@@ -24,6 +24,8 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart' as window_size;
+import '../../license/license_page.dart';
+import '../../license/mr_license.dart';
 import '../widgets/button.dart';
 
 class DesktopHomePage extends StatefulWidget {
@@ -197,14 +199,16 @@ class _DesktopHomePageState extends State<DesktopHomePage>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const Spacer(),
-          _buildStatusPill(context),
-          const SizedBox(width: 12),
+          const SizedBox(width: 12,
+                         _buildLicensePill(context),
+                         const Spacer(),
+_buildStatusPill(context),
+                         const SizedBox(width: 12),
           TextButton(
             onPressed: _openRolePicker,
             child: const Text('Trocar papel'),
           ),
-          _buildThemeButton(context),
+          _buildSupportButton(context),
           IconButton(
             icon: const Icon(Icons.settings, color: MyTheme.accent),
             tooltip: 'Configurações',
@@ -246,20 +250,70 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     });
   }
 
-  Widget _buildThemeButton(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return IconButton(
-      icon: Icon(
-        isDark ? Icons.light_mode : Icons.dark_mode,
-        color: MyTheme.accent,
-      ),
-      tooltip: isDark ? 'Tela clara' : 'Tela escura',
-      onPressed: () async {
-        await MyTheme.changeDarkMode(
-            isDark ? ThemeMode.light : ThemeMode.dark);
-      },
-    );
+  Widget _buildLicensePill(BuildContext context) {
+      final expiraEm = LicenseService.storedExpiry();
+    final agora = DateTime.now();
+    final String texto;
+    if (expiraEm == null || expiraEm.isBefore(agora)) {
+        texto = 'Licença vencida';
+    } else {
+        final dias = expiraEm.difference(agora).inDays;
+      texto = dias == 1
+          ? 'Falta 1 dia para renovar'
+        : 'Faltam $dias dias para renovar';
+    }
+        return InkWell(
+                onTap: _openLicensePage,
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                                      color: MyTheme.accent.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: MyTheme.accent),
+                                    ),
+                          child: Text(
+                                      texto,
+                                      style: const TextStyle(color: MyTheme.accent, fontSize: 13),
+                                    ),
+                        ),
+              );
   }
+
+            Widget _buildSupportButton(BuildContext context) {
+                  return ElevatedButton.icon(
+                          onPressed: () async {
+                                    await launchUrl(
+                                                Uri.parse('https://wa.me/5511962579428'),
+                                                mode: LaunchMode.externalApplication,
+                                              );
+                          },
+                          icon: const Icon(Icons.chat, size: 18, color: Colors.white),
+                          label: const Text('Suporte', style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  ),
+                        );
+            }
+
+            void _openLicensePage() {
+                  Navigator.of(context).push(
+                          MaterialPageRoute(
+                                    builder: (_) => MrLicensePage(
+                                                onActivated: () {
+                                                              Navigator.of(context).pop();
+                                                              Get.forceAppUpdate();
+                                                },
+                                                onClient: () {
+                                                              Navigator.of(context).pop();
+                                                              Get.forceAppUpdate();
+                                                },
+                                              ),
+                                  ),
+                        );
+            }
+    
 
   void _openRolePicker() {
     Navigator.of(context).push(
@@ -840,6 +894,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   void initState() {
     super.initState();
+        // MR Acesso Remoto: tema sempre escuro.
+        MyTheme.changeDarkMode(ThemeMode.dark);
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
       final error = await bind.mainGetError();
