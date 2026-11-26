@@ -11,7 +11,7 @@ import '../models/platform_model.dart';
 /// clássico. O app autoriza SÓ pelo JSON da resposta, nunca pelo HTTP:
 /// ok + valid + premium + tipo "premium" + produtos.mr_acesso_remoto +
 /// expira_em no futuro. "Válido" não é "pago": chave de teste (tipo
-/// "teste", premium false) é negada, mesmo com valid true.
+/// "teste", premium false) é aceita quando válida e não vencida.
 /// Falha de rede, timeout ou JSON malformado NUNCA é validação com sucesso.
 /// A chave guardada com expira_em futuro vale offline até essa data.
 /// O valor da chave nunca é registado em logs.
