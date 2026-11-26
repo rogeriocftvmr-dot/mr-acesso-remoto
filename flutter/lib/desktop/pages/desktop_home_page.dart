@@ -199,7 +199,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(width: 12,)
+          const SizedBox(width: 12),
                          _buildLicensePill(context),
                          const Spacer(),
 _buildStatusPill(context),
